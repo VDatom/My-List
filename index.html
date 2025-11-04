@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARC: Reusable Lists & Quote Demo</title>
+    <title>ARC: Reusable Lists & Quote Demo (Responsive)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom scrollbar for list item areas */
@@ -28,6 +28,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        
+        /* Utility for hiding elements quickly in JS */
+        .hidden-item { display: none !important; }
 
         /* --- PRINT STYLES --- */
         @media print {
@@ -79,9 +82,9 @@
 <body class="bg-gray-50 min-h-screen font-sans">
 
     <header class="sticky top-0 bg-white shadow-md z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-600">ARC Components</h1>
-            <div class="flex items-center space-x-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-blue-600 mb-2 sm:mb-0 w-full sm:w-auto">ARC Components</h1>
+            <div class="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-end">
                 <div id="view-toggle" class="flex p-1 bg-gray-100 rounded-lg cursor-pointer text-sm font-medium">
                     <button data-view="products" class="view-tab px-3 py-1 rounded-md transition-colors duration-200 bg-blue-600 text-white shadow-sm" aria-label="Show Products View">Products</button>
                     <button data-view="lists" class="view-tab px-3 py-1 rounded-md transition-colors duration-200 text-gray-700 relative ml-1" aria-label="Show My Lists View">
@@ -93,10 +96,10 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <section id="products-view" class="space-y-6">
-            <h2 class="text-3xl font-extrabold text-gray-900 border-b pb-2">Component Catalog</h2>
-            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 border-b pb-2">Component Catalog</h2>
+            <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 </div>
             <div id="products-empty" class="hidden text-center py-10">
                 <p class="text-gray-500">No products found. Please refresh the demo.</p>
@@ -104,7 +107,7 @@
         </section>
 
         <section id="lists-view" class="hidden space-y-6">
-            <h2 class="text-3xl font-extrabold text-gray-900 border-b pb-2">My Component Lists</h2>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 border-b pb-2">My Component Lists</h2>
             <div id="lists-container" class="space-y-4">
                 </div>
             <div id="lists-empty" class="text-center py-10 border border-dashed rounded-lg bg-white">
@@ -120,7 +123,7 @@
     <div id="print-container" class="print-container hidden"></div>
 
     <div id="add-to-list-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="add-list-title">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all scale-95 duration-300" role="document">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-4 sm:p-6 transform transition-all scale-95 duration-300" role="document">
             <h3 id="add-list-title" class="text-xl font-bold mb-4 text-blue-600">Add "<span id="modal-product-part"></span>" to List</h3>
             <div id="modal-product-preview" class="flex items-center p-3 mb-4 bg-gray-50 rounded-md border">
                 </div>
@@ -128,9 +131,9 @@
             <div class="space-y-4">
                 <div class="border p-4 rounded-lg bg-white">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Option A: Create New List</label>
-                    <div class="flex space-x-2">
-                        <input type="text" id="new-list-name-input" placeholder="New List Name" class="flex-grow p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" aria-label="New list name">
-                        <button id="create-and-add-btn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex-shrink-0" aria-label="Create new list and add item">➕ Create & Add</button>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <input type="text" id="new-list-name-input" placeholder="New List Name" class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" aria-label="New list name">
+                        <button id="create-and-add-btn" class="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex-shrink-0" aria-label="Create new list and add item">➕ Create & Add</button>
                     </div>
                     <p id="new-list-error" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">List name is required and must be unique.</p>
                 </div>
@@ -143,11 +146,11 @@
 
                 <div class="border p-4 rounded-lg bg-white">
                     <label for="existing-list-select" class="block text-sm font-medium text-gray-700 mb-2">Option B: Add to Existing List</label>
-                    <div class="flex space-x-2">
-                        <select id="existing-list-select" class="flex-grow p-2 border rounded-md bg-white focus:ring-blue-500 focus:border-blue-500" aria-label="Select existing list">
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <select id="existing-list-select" class="w-full p-2 border rounded-md bg-white focus:ring-blue-500 focus:border-blue-500" aria-label="Select existing list">
                             <option value="">Select a List</option>
                             </select>
-                        <button id="add-to-existing-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex-shrink-0" disabled aria-label="Add item to selected list">🛒 Add to List</button>
+                        <button id="add-to-existing-btn" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex-shrink-0" disabled aria-label="Add item to selected list">🛒 Add to List</button>
                     </div>
                     <p id="existing-list-error" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">Please select a list.</p>
                     <p id="duplicate-item-error" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">This item is already in the selected list.</p>
@@ -161,8 +164,8 @@
     </div>
 
     <div id="quote-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="quote-title">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform transition-all scale-95 duration-300" role="document">
-            <h3 id="quote-title" class="text-2xl font-bold mb-4 text-blue-600">Request Quote for: <span id="quote-list-name"></span></h3>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-4 sm:p-6 transform transition-all scale-95 duration-300" role="document">
+            <h3 id="quote-title" class="text-xl sm:text-2xl font-bold mb-4 text-blue-600">Request Quote for: <span id="quote-list-name"></span></h3>
             <form id="quote-form" class="space-y-4">
                 <input type="hidden" id="quote-list-id-input">
                 
@@ -269,6 +272,25 @@
         let demoUser = {};
 
         /**
+         * Generates a random stock quantity based on inventory status.
+         * @param {string} status Inventory status.
+         * @returns {number} Stock quantity.
+         */
+        function generateStockQuantity(status) {
+            switch (status) {
+                case 'In Stock':
+                    return Math.floor(Math.random() * 900) + 100; // 100 to 1000
+                case 'Low Stock':
+                    return Math.floor(Math.random() * 99) + 1; // 1 to 99
+                case 'Out of Stock':
+                case 'Discontinued':
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
+
+        /**
          * Loads data from localStorage or initializes with samples.
          */
         function loadData() {
@@ -276,12 +298,29 @@
                 // Products
                 let storedProducts = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
                 products = storedProducts ? JSON.parse(storedProducts) : SAMPLE_PRODUCTS;
+                
+                // Add or update stockQuantity for all products
+                products = products.map(p => ({
+                    ...p,
+                    stockQuantity: generateStockQuantity(p.inventory)
+                }));
+
                 localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
 
                 // Lists
                 let storedLists = localStorage.getItem(STORAGE_KEYS.LISTS);
                 lists = storedLists ? JSON.parse(storedLists) : [];
                 
+                // Ensure list items have targetPrice and lists have isQuoteMode property
+                lists = lists.map(list => ({
+                    ...list,
+                    isQuoteMode: list.isQuoteMode || false, // Initialize quote mode
+                    items: list.items.map(item => ({
+                        ...item,
+                        targetPrice: item.targetPrice || '' // Initialize targetPrice
+                    }))
+                }));
+
                 // User
                 let storedUser = localStorage.getItem(STORAGE_KEYS.USER);
                 demoUser = storedUser ? JSON.parse(storedUser) : DEMO_USER;
@@ -290,7 +329,10 @@
             } catch (error) {
                 console.error("Error loading or initializing data from localStorage:", error);
                 // Fallback to in-memory defaults if storage fails
-                products = SAMPLE_PRODUCTS;
+                products = SAMPLE_PRODUCTS.map(p => ({
+                    ...p,
+                    stockQuantity: generateStockQuantity(p.inventory)
+                }));
                 lists = [];
                 demoUser = DEMO_USER;
             }
@@ -306,9 +348,12 @@
          */
         function saveLists() {
             try {
+                // Ensure we save a clean version of lists without unnecessary runtime fields if any are added later.
                 localStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(lists));
                 updateListCounter();
-                renderLists(); // Re-render lists to reflect changes (e.g., quantity)
+                // Note: We don't call renderLists here if only list internals changed 
+                // but for simplicity in this demo, we can keep it.
+                // However, the function that calls saveLists (like updateItemQuantity) should handle re-rendering if necessary.
             } catch (error) {
                 console.error("Error saving lists to localStorage:", error);
                 showToast('Error saving lists.', 'error');
@@ -340,6 +385,19 @@
                 style: 'currency',
                 currency: 'USD',
             });
+        }
+        
+        /**
+         * Formats a number as simple currency input (no symbol) for target price.
+         * @param {string|number|null|undefined} price
+         * @returns {string} Formatted string or an empty string.
+         */
+        function formatTargetPriceInput(price) {
+            if (price === null || price === undefined || price === '') {
+                return '';
+            }
+            // Simple toFixed(2) for input field aesthetic
+            return parseFloat(price).toFixed(2);
         }
 
         /**
@@ -559,12 +617,12 @@
                         <p class="text-sm text-gray-400">${p.brand}</p>
                         <h3 class="text-xl font-bold text-gray-800">${p.partNumber}</h3>
                         <p class="truncate-2-lines text-gray-600 text-sm h-10">${p.description}</p>
-                        <div class="flex justify-between items-center pt-2">
+                        <div class="flex flex-wrap justify-between items-center pt-2 gap-2">
                             <span class="text-lg font-extrabold ${p.price === null ? 'text-gray-500' : 'text-green-600'}">
                                 ${formatPrice(p.price)}
                             </span>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(p.inventory)}">
-                                ${p.inventory}
+                            <span class="text-sm font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(p.inventory)}">
+                                ${p.inventory} (${p.stockQuantity} in stock)
                             </span>
                         </div>
                         <button onclick="openAddToListModal('${p.id}')" class="w-full py-2 mt-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium">
@@ -594,6 +652,10 @@
                 const hasPriceAndInventory = list.items.every(item => item.price !== null && item.inventory && item.inventory !== 'Out of Stock' && item.inventory !== 'Discontinued');
                 const isNotEmpty = list.items.length > 0;
                 
+                // Quote Mode Visibility class
+                const quoteVisibleClass = list.isQuoteMode ? '' : 'hidden-item';
+                const quoteHiddenClass = list.isQuoteMode ? 'hidden-item' : '';
+
                 return `
                     <div class="list-card bg-white rounded-lg shadow-lg border border-gray-200 p-4 space-y-3" data-list-id="${list.id}">
                         <div class="flex justify-between items-start border-b pb-3 mb-3">
@@ -607,64 +669,90 @@
                                 >${list.name}</span>
                                 <span id="name-error-${list.id}" class="text-red-500 text-xs hidden"></span>
                             </h3>
-                            <div class="flex space-x-2 text-sm text-gray-600">
-                                <button onclick="duplicateList('${list.id}')" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Duplicate List" aria-label="Duplicate list ${list.name}">📄</button>
-                                <button onclick="printList('${list.id}')" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Print List" aria-label="Print list ${list.name}">🖨️</button>
-                                <button onclick="exportListToCSV('${list.id}')" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Export CSV" aria-label="Export list ${list.name} to CSV">⬇️</button>
-                                <button onclick="confirmDeleteList('${list.id}', '${list.name}')" class="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors" title="Delete List" aria-label="Delete list ${list.name}">🗑️</button>
+                            <div class="flex space-x-1 sm:space-x-2 text-sm text-gray-600">
+                                <button onclick="duplicateList('${list.id}')" class="p-1 sm:p-2 rounded-full hover:bg-gray-100 transition-colors" title="Duplicate List" aria-label="Duplicate list ${list.name}">📄</button>
+                                <button onclick="printList('${list.id}')" class="p-1 sm:p-2 rounded-full hover:bg-gray-100 transition-colors" title="Print List" aria-label="Print list ${list.name}">🖨️</button>
+                                <button onclick="exportListToCSV('${list.id}')" class="p-1 sm:p-2 rounded-full hover:bg-gray-100 transition-colors" title="Export CSV" aria-label="Export list ${list.name} to CSV">⬇️</button>
+                                <button onclick="confirmDeleteList('${list.id}', '${list.name}')" class="p-1 sm:p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors" title="Delete List" aria-label="Delete list ${list.name}">🗑️</button>
                             </div>
                         </div>
 
                         <div class="list-items-scrollable max-h-96 overflow-y-auto pr-2 space-y-3" id="list-items-${list.id}">
                             ${list.items.length > 0 ? list.items.map(item => `
-                                <div class="item-card flex items-center border-b pb-3 last:border-b-0 last:pb-0">
-                                    <img src="${item.imageUrl}" alt="${item.partNumber} image" class="w-12 h-12 object-cover rounded-md flex-shrink-0 mr-3 bg-blue-50">
-                                    <div class="flex-grow min-w-0">
+                                <div class="item-card flex flex-col sm:flex-row items-start sm:items-center border-b pb-3 last:border-b-0 last:pb-0">
+                                    <img src="${item.imageUrl}" alt="${item.partNumber} image" class="w-12 h-12 object-cover rounded-md flex-shrink-0 mr-3 mb-2 sm:mb-0 bg-blue-50">
+                                    
+                                    <div class="flex-grow min-w-0 w-full sm:w-auto">
                                         <p class="font-semibold text-gray-800 text-sm">${item.partNumber}</p>
                                         <p class="text-xs text-gray-600 truncate">${item.description}</p>
-                                        <div class="flex items-center space-x-2 mt-1">
+                                        <div class="flex flex-wrap items-center space-x-2 mt-1">
                                             <p class="text-xs font-bold ${item.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(item.price)}</p>
                                             <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(item.inventory)}">
-                                                ${item.inventory}
+                                                ${item.inventory} (${item.stockQuantity} in stock)
                                             </span>
                                         </div>
                                     </div>
                                     
-                                    <div class="flex items-center space-x-2 ml-4 flex-shrink-0">
-                                        <div class="flex flex-col items-end">
+                                    <div class="flex flex-col sm:flex-row items-end sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 ml-0 sm:ml-4 flex-shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                                        
+                                        <div class="flex flex-col items-end ${quoteVisibleClass} w-full sm:w-auto">
+                                            <label for="price-input-${list.id}-${item.id}" class="text-xs text-gray-500 mb-1">Target Price (USD)</label>
+                                            <input 
+                                                type="number" 
+                                                min="0.01"
+                                                step="0.01"
+                                                value="${formatTargetPriceInput(item.targetPrice)}" 
+                                                onchange="updateItemTargetPrice('${list.id}', '${item.id}', this.value)"
+                                                class="w-full sm:w-20 p-1 border rounded-md text-center text-sm focus:ring-blue-500 focus:border-blue-500" 
+                                                aria-label="Target Price for ${item.partNumber}"
+                                                data-item-id="${item.id}"
+                                                id="price-input-${list.id}-${item.id}" 
+                                            >
+                                            <p id="price-error-${list.id}-${item.id}" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">Price req.</p>
+                                        </div>
+
+                                        <div class="flex flex-col items-end ${quoteVisibleClass} w-full sm:w-auto">
                                             <label for="qty-input-${list.id}-${item.id}" class="text-xs text-gray-500 mb-1">Required Qty</label>
                                             <input 
                                                 type="number" 
-                                                min="0"
+                                                min="1"
                                                 value="${item.quantity}" 
                                                 onchange="updateItemQuantity('${list.id}', '${item.id}', this.value)"
-                                                class="w-16 p-1 border rounded-md text-center text-sm quantity-input focus:ring-blue-500 focus:border-blue-500" 
+                                                class="w-full sm:w-16 p-1 border rounded-md text-center text-sm quantity-input focus:ring-blue-500 focus:border-blue-500" 
                                                 aria-label="Required Quantity for ${item.partNumber}"
                                                 data-item-id="${item.id}"
                                                 id="qty-input-${list.id}-${item.id}" 
                                             >
-                                            <p id="qty-error-${list.id}-${item.id}" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">Qty > 0 required.</p>
+                                            <p id="qty-error-${list.id}-${item.id}" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">Qty > 0 req.</p>
                                         </div>
-
-                                        ${item.price !== null && item.inventory && item.inventory !== 'Out of Stock' && item.inventory !== 'Discontinued' ? `
-                                            <button onclick="moveItemToCart('${list.id}', '${item.id}')" class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" title="Move Item to Cart" aria-label="Move ${item.partNumber} to cart">🛒</button>
-                                        ` : '<span class="w-8"></span>'}
                                         
-                                        <button onclick="confirmRemoveItem('${list.id}', '${item.id}', '${item.partNumber}')" class="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors" title="Remove Item" aria-label="Remove ${item.partNumber}">❌</button>
+                                        <div class="flex items-center space-x-2 ml-0 sm:ml-4 flex-shrink-0 ${quoteHiddenClass} w-full sm:w-auto justify-end">
+                                            ${item.price !== null && item.inventory && item.inventory !== 'Out of Stock' && item.inventory !== 'Discontinued' ? `
+                                                <button onclick="moveItemToCart('${list.id}', '${item.id}')" class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" title="Move Item to Cart" aria-label="Move ${item.partNumber} to cart">🛒</button>
+                                            ` : '<span class="w-8"></span>'}
+                                        
+                                            <button onclick="confirmRemoveItem('${list.id}', '${item.id}', '${item.partNumber}')" class="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors" title="Remove Item" aria-label="Remove ${item.partNumber}">❌</button>
+                                        </div>
+                                        
                                     </div>
                                 </div>
                             `).join('') : '<p class="text-gray-500 text-center py-4">This list is empty. Add some products!</p>'}
                         </div>
 
                         ${isNotEmpty ? `
-                            <div class="flex justify-end pt-3 border-t mt-3 space-x-2">
+                            <div class="flex flex-col sm:flex-row justify-end pt-3 border-t mt-3 space-y-2 sm:space-y-0 sm:space-x-2">
+                                <button onclick="toggleQuoteMode('${list.id}')" class="w-full sm:w-auto flex items-center justify-center space-x-1 px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm font-medium ${quoteVisibleClass}" aria-label="Exit quote mode and go back">
+                                    ⬅️ Back to List
+                                </button>
+                                
                                 ${hasPriceAndInventory ? `
-                                    <button onclick="moveFullListToCart('${list.id}')" class="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium" aria-label="Move entire list to cart">
+                                    <button onclick="moveFullListToCart('${list.id}')" class="w-full sm:w-auto flex items-center justify-center space-x-1 px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium ${quoteHiddenClass}" aria-label="Move entire list to cart">
                                         🛒 Move List to Cart
                                     </button>
                                 ` : ''}
-                                <button onclick="checkQuantitiesAndOpenQuote('${list.id}')" class="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium" aria-label="Send quote request for list ${list.name}">
-                                    💬 Send Quote
+                                
+                                <button onclick="${list.isQuoteMode ? `checkQuantitiesAndOpenQuote('${list.id}')` : `toggleQuoteMode('${list.id}')`}" class="w-full sm:w-auto flex items-center justify-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium" aria-label="${list.isQuoteMode ? 'Submit quote request' : 'Send quote request for list ' + list.name}">
+                                    ${list.isQuoteMode ? '✅ Submit Quote' : '💬 Send Quote'}
                                 </button>
                             </div>
                         ` : ''}
@@ -673,9 +761,41 @@
             }).join('');
         }
 
+        /**
+         * Toggles the list in and out of "Quote Mode", revealing the required fields.
+         * @param {string} listId
+         */
+        function toggleQuoteMode(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (list) {
+                list.isQuoteMode = !list.isQuoteMode;
+                
+                // Clear errors when entering or exiting quote mode
+                list.items.forEach(item => {
+                    const qtyErrorEl = document.getElementById(`qty-error-${listId}-${item.id}`);
+                    const priceErrorEl = document.getElementById(`price-error-${listId}-${item.id}`);
+                    const qtyInputEl = document.getElementById(`qty-input-${listId}-${item.id}`);
+                    const priceInputEl = document.getElementById(`price-input-${listId}-${item.id}`);
+                    if (qtyErrorEl) qtyErrorEl.classList.add('hidden');
+                    if (priceErrorEl) priceErrorEl.classList.add('hidden');
+                    if (qtyInputEl) qtyInputEl.classList.remove('border-red-500');
+                    if (priceInputEl) priceInputEl.classList.remove('border-red-500');
+                });
+                
+                // We don't save the state to localStorage as this is purely UI context
+                renderLists();
+                
+                if (list.isQuoteMode) {
+                    showToast(`List "${list.name}" is now in Quote Mode. Please enter quantities and target prices.`, 'info');
+                }
+            }
+        }
+
         // ====================================================================
         // V. PRODUCT & LIST ACTIONS
         // ====================================================================
+        
+        // ... (openAddToListModal, existing-list-select event listener, create-and-add-btn handler, add-to-existing-btn handler, createNewList, addItemToList, confirmRemoveItem, removeItemFromList, saveListName, confirmDeleteList, deleteList, duplicateList, moveItemToCart, moveFullListToCart remain the same) ...
 
         /**
          * Opens the modal to add a product to a new or existing list.
@@ -698,7 +818,7 @@
                     <div class="flex items-center space-x-2 mt-1">
                         <p class="text-xs font-bold ${currentProduct.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(currentProduct.price)}</p>
                         <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(currentProduct.inventory)}">
-                            ${currentProduct.inventory}
+                            ${currentProduct.inventory} (${currentProduct.stockQuantity} in stock)
                         </span>
                     </div>
                 </div>
@@ -719,7 +839,7 @@
         }
 
         /**
-         * Adds an event listener for the existing list dropdown change.
+         * Handler for the existing list dropdown change.
          */
         document.getElementById('existing-list-select').addEventListener('change', (e) => {
             const listId = e.target.value;
@@ -815,7 +935,8 @@
                 id: generateId(),
                 name: name,
                 items: [],
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                isQuoteMode: false // New property
             };
             lists.push(newList);
             saveLists();
@@ -832,7 +953,7 @@
             const list = lists.find(l => l.id === listId);
             if (!list) return;
 
-            // Ensure the item object is ready for the list (with quantity)
+            // Ensure the item object is ready for the list (with quantity and new targetPrice)
             const newItem = {
                 id: product.id,
                 partNumber: product.partNumber,
@@ -840,8 +961,10 @@
                 brand: product.brand,
                 price: product.price,
                 inventory: product.inventory,
+                stockQuantity: product.stockQuantity, // Include stockQuantity
                 imageUrl: product.imageUrl,
-                quantity: 0
+                quantity: 0,
+                targetPrice: '' // New property
             };
 
             list.items.push(newItem);
@@ -884,11 +1007,13 @@
             if (list.items.length < initialLength) {
                 saveLists();
                 showToast('Item removed successfully.', 'info');
+                // If we removed an item, re-render to ensure the UI is fresh
+                renderLists();
             }
         }
 
         /**
-         * Updates an item's quantity in a list.
+         * Updates an item's required quantity in a list.
          * @param {string} listId
          * @param {string} itemId
          * @param {string} value New quantity value.
@@ -902,12 +1027,40 @@
 
             let qty = parseInt(value, 10);
             if (isNaN(qty) || qty < 0) {
-                qty = 0; // Default to 0 or re-apply current value
+                qty = 0; // Default to 0 
             }
 
             // Only save if the quantity actually changed
             if (item.quantity !== qty) {
                 item.quantity = qty;
+                saveLists();
+            }
+        }
+        
+        /**
+         * Updates an item's target price in a list.
+         * @param {string} listId
+         * @param {string} itemId
+         * @param {string} value New price value.
+         */
+        function updateItemTargetPrice(listId, itemId, value) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            const item = list.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            // Simple validation and cleanup
+            let price = parseFloat(value);
+            if (isNaN(price) || price < 0.01) {
+                price = ''; 
+            } else {
+                price = price.toFixed(2);
+            }
+
+            // Only save if the price actually changed
+            if (item.targetPrice !== price) {
+                item.targetPrice = price;
                 saveLists();
             }
         }
@@ -978,6 +1131,8 @@
                 lists.splice(listIndex, 1);
                 saveLists();
                 showToast(`List "${listName}" deleted.`, 'success');
+                // If a list is deleted, re-render to update the view
+                renderLists();
             }
         }
 
@@ -1014,19 +1169,22 @@
                 // Create new list object
                 const newItems = originalList.items.map(item => ({
                     ...item,
-                    quantity: 0 // Quantities reset to 0
+                    quantity: 0, // Quantities reset to 0
+                    targetPrice: '' // Target Price reset
                 }));
 
                 const newList = {
                     id: generateId(),
                     name: newName,
                     items: newItems,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    isQuoteMode: false
                 };
 
                 lists.push(newList);
                 saveLists();
-                showToast(`List "${originalList.name}" duplicated as "${newName}". Quantities reset to 0.`, 'success');
+                showToast(`List "${originalList.name}" duplicated as "${newName}". Quantities reset.`, 'success');
+                renderLists();
             }
 
             promptForNewName();
@@ -1044,14 +1202,12 @@
 
             // Simulate "Move to Cart" logic
             const isMOQ = item.quantity === 0 || isNaN(item.quantity) || item.quantity < 0;
-
-            // Optional: You could remove the item from the list here if it's a "move"
-            // removeItemFromList(listId, itemId); // keeping it for demo purposes
-
+            const quantityToCart = isMOQ ? 1 : item.quantity;
+            
             if (isMOQ) {
-                showToast('Item moved to your cart with MOQ values (Qty: 1 assumed for cart). You can change it on the cart page.', 'info');
+                showToast(`Item moved to your cart with MOQ values (Qty: 1 assumed).`, 'info');
             } else {
-                showToast(`Item ${item.partNumber} (Qty: ${item.quantity}) moved to your cart.`, 'success');
+                showToast(`Item ${item.partNumber} (Qty: ${quantityToCart}) moved to your cart.`, 'success');
             }
         }
 
@@ -1071,11 +1227,8 @@
             showToast(`List "${list.name}" moved to your cart.`, 'success');
 
             if (hasZeroQty) {
-                showToast('Some items were moved with MOQ values (Qty: 1 assumed for cart). You can change them on the cart page.', 'info');
+                showToast('Some items were moved with MOQ values (Qty: 1 assumed).', 'info');
             }
-            
-            // For a demo, let's keep the list, but in a real flow, you might delete it or clear quantities.
-            // confirmDeleteList(listId, list.name); // If the goal is to clear the list
         }
 
         // ====================================================================
@@ -1083,49 +1236,59 @@
         // ====================================================================
 
         /**
-         * Checks quantities and opens the quote modal if valid.
+         * Checks quantities and target prices before opening the quote modal.
          * @param {string} listId
          */
         function checkQuantitiesAndOpenQuote(listId) {
             const list = lists.find(l => l.id === listId);
-            if (!list || list.items.length === 0) return;
+            if (!list || list.items.length === 0) {
+                showToast('List is empty. Cannot submit quote.', 'error');
+                return;
+            }
 
             let allValid = true;
             list.items.forEach(item => {
                 const qty = parseInt(item.quantity, 10);
-                const errorId = `qty-error-${listId}-${item.id}`;
-                const errorEl = document.getElementById(errorId);
-                const inputEl = document.querySelector(`#list-items-${listId} input[data-item-id="${item.id}"]`);
+                const price = parseFloat(item.targetPrice);
+                
+                const qtyErrorId = `qty-error-${listId}-${item.id}`;
+                const priceErrorId = `price-error-${listId}-${item.id}`;
+                const qtyInputEl = document.getElementById(`qty-input-${listId}-${item.id}`);
+                const priceInputEl = document.getElementById(`price-input-${listId}-${item.id}`);
 
-                if (!qty || qty <= 0 || isNaN(qty)) {
+                // Reset validation state
+                if (qtyInputEl) qtyInputEl.classList.remove('border-red-500');
+                if (priceInputEl) priceInputEl.classList.remove('border-red-500');
+                if (document.getElementById(qtyErrorId)) document.getElementById(qtyErrorId).classList.add('hidden');
+                if (document.getElementById(priceErrorId)) document.getElementById(priceErrorId).classList.add('hidden');
+
+                // Validate Quantity
+                if (isNaN(qty) || qty <= 0) {
                     allValid = false;
-                    if (errorEl) {
-                        errorEl.classList.remove('hidden');
-                    }
-                    if (inputEl) {
-                        inputEl.classList.add('border-red-500');
-                    }
-                } else {
-                    if (errorEl) {
-                        errorEl.classList.add('hidden');
-                    }
-                    if (inputEl) {
-                        inputEl.classList.remove('border-red-500');
-                    }
+                    if (document.getElementById(qtyErrorId)) document.getElementById(qtyErrorId).classList.remove('hidden');
+                    if (qtyInputEl) qtyInputEl.classList.add('border-red-500');
+                }
+
+                // Validate Target Price
+                if (isNaN(price) || price <= 0) {
+                    allValid = false;
+                    if (document.getElementById(priceErrorId)) document.getElementById(priceErrorId).classList.remove('hidden');
+                    if (priceInputEl) priceInputEl.classList.add('border-red-500');
                 }
             });
 
             if (!allValid) {
-                showToast('All items must have a required quantity greater than 0 to submit a quote.', 'error');
+                showToast('Please fill in a required quantity (>0) AND a target price (>$0) for all items.', 'error');
                 // Scroll the view to the first error
-                const firstError = document.querySelector(`#list-items-${listId} .border-red-500`);
+                const listItemsEl = document.getElementById(`list-items-${listId}`);
+                const firstError = listItemsEl.querySelector('.border-red-500');
                 if (firstError) {
                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 return;
             }
 
-            // If all quantities are valid, populate and open the quote modal
+            // If all quantities and prices are valid, populate and open the quote modal
             openQuoteModal(listId);
         }
 
@@ -1261,8 +1424,10 @@
                     description: item.description,
                     brand: item.brand,
                     price: item.price,
-                    inventory: item.inventory, // Include inventory in quote data
-                    quantity: item.quantity
+                    inventory: item.inventory, 
+                    stockQuantity: item.stockQuantity,
+                    quantity: item.quantity,
+                    targetPrice: item.targetPrice // Include target price
                 })),
                 user: {
                     email: document.getElementById('quote-email').value.trim(),
@@ -1312,15 +1477,16 @@
                 return;
             }
 
-            // MODIFICATION: Added "Inventory Status" header and data field.
-            const headers = ["Part Number", "Description", "Brand", "Unit Price", "Inventory Status", "Quantity"];
+            // MODIFICATION: Included Target Price in the export
+            const headers = ["Part Number", "Description", "Brand", "Unit Price", "Stock Qty", "Required Quantity", "Target Price"];
             const rows = list.items.map(item => [
                 `"${item.partNumber}"`,
                 `"${item.description.replace(/"/g, '""')}"`, // Handle quotes in descriptions
                 `"${item.brand}"`,
                 item.price !== null ? item.price.toString() : 'N/A',
-                `"${item.inventory}"`,
-                item.quantity.toString()
+                item.stockQuantity.toString(), // Include Stock Quantity (number only)
+                item.quantity.toString(),
+                item.targetPrice.toString() || 'N/A' // Include Target Price
             ]);
 
             const csvContent = [
@@ -1359,16 +1525,16 @@
             const printContainer = document.getElementById('print-container');
             const date = new Date().toLocaleDateString();
 
-            // 1. Construct the printable HTML content
-            // MODIFICATION: Added a column for Inventory Status
+            // MODIFICATION: Included Target Price in Printout
             const tableRows = list.items.map(item => `
                 <tr>
                     <td>${item.partNumber}</td>
                     <td>${item.description}</td>
                     <td>${item.brand}</td>
                     <td>${formatPrice(item.price)}</td>
-                    <td>${item.inventory}</td> 
+                    <td>${item.stockQuantity}</td>
                     <td>${item.quantity}</td>
+                    <td>${item.targetPrice ? formatPrice(item.targetPrice) : 'N/A'}</td>
                 </tr>
             `).join('');
 
@@ -1383,8 +1549,9 @@
                                 <th>Description</th>
                                 <th>Brand</th>
                                 <th>Unit Price</th>
-                                <th>Inventory</th> 
+                                <th>Stock Qty</th>
                                 <th>Required Qty</th>
+                                <th>Target Price</th>
                             </tr>
                         </thead>
                         <tbody>
