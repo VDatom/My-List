@@ -1,1 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARC: Reusable Lists & Quote Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for list item areas */
+        .list-items-scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+        .list-items-scrollable::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .list-items-scrollable::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 3px;
+        }
+        .list-items-scrollable::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+        /* Custom class for 2-line description truncation */
+        .truncate-2-lines {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
+        /* --- PRINT STYLES --- */
+        @media print {
+            /* Hide everything except the print-specific container */
+            body > *:not(.print-container) {
+                display: none !important;
+            }
+            .print-container {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                /* Reset margins for clean printing */
+                margin: 0;
+                padding: 0;
+            }
+            /* Styling for printed list table */
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+            .print-table th, .print-table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            .print-table th {
+                background-color: #f2f2f2;
+                font-size: 10pt;
+            }
+            .print-table td {
+                font-size: 9pt;
+            }
+            .print-header {
+                font-size: 16pt;
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #1f2937; /* Gray-800 */
+            }
+            .print-meta {
+                font-size: 10pt;
+                color: #6b7280; /* Gray-500 */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <header class="sticky top-0 bg-white shadow-md z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-600">ARC Components</h1>
+            <div class="flex items-center space-x-4">
+                <div id="view-toggle" class="flex p-1 bg-gray-100 rounded-lg cursor-pointer text-sm font-medium">
+                    <button data-view="products" class="view-tab px-3 py-1 rounded-md transition-colors duration-200 bg-blue-600 text-white shadow-sm" aria-label="Show Products View">Products</button>
+                    <button data-view="lists" class="view-tab px-3 py-1 rounded-md transition-colors duration-200 text-gray-700 relative ml-1" aria-label="Show My Lists View">
+                        My Lists
+                        <span id="list-counter" class="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <section id="products-view" class="space-y-6">
+            <h2 class="text-3xl font-extrabold text-gray-900 border-b pb-2">Component Catalog</h2>
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            <div id="products-empty" class="hidden text-center py-10">
+                <p class="text-gray-500">No products found. Please refresh the demo.</p>
+            </div>
+        </section>
+
+        <section id="lists-view" class="hidden space-y-6">
+            <h2 class="text-3xl font-extrabold text-gray-900 border-b pb-2">My Component Lists</h2>
+            <div id="lists-container" class="space-y-4">
+                </div>
+            <div id="lists-empty" class="text-center py-10 border border-dashed rounded-lg bg-white">
+                <p class="text-gray-500 text-lg">
+                    <span class="text-2xl block mb-2">🤷‍♂️</span>
+                    You haven't created any lists yet.
+                </p>
+                <button onclick="changeView('products')" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">Browse Products</button>
+            </div>
+        </section>
+    </main>
+    
+    <div id="print-container" class="print-container hidden"></div>
+
+    <div id="add-to-list-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="add-list-title">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 transform transition-all scale-95 duration-300" role="document">
+            <h3 id="add-list-title" class="text-xl font-bold mb-4 text-blue-600">Add "<span id="modal-product-part"></span>" to List</h3>
+            <div id="modal-product-preview" class="flex items-center p-3 mb-4 bg-gray-50 rounded-md border">
+                </div>
+
+            <div class="space-y-4">
+                <div class="border p-4 rounded-lg bg-white">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Option A: Create New List</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="new-list-name-input" placeholder="New List Name" class="flex-grow p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" aria-label="New list name">
+                        <button id="create-and-add-btn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex-shrink-0" aria-label="Create new list and add item">➕ Create & Add</button>
+                    </div>
+                    <p id="new-list-error" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">List name is required and must be unique.</p>
+                </div>
+
+                <div class="flex items-center my-4">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-500 font-medium">OR</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <div class="border p-4 rounded-lg bg-white">
+                    <label for="existing-list-select" class="block text-sm font-medium text-gray-700 mb-2">Option B: Add to Existing List</label>
+                    <div class="flex space-x-2">
+                        <select id="existing-list-select" class="flex-grow p-2 border rounded-md bg-white focus:ring-blue-500 focus:border-blue-500" aria-label="Select existing list">
+                            <option value="">Select a List</option>
+                            </select>
+                        <button id="add-to-existing-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex-shrink-0" disabled aria-label="Add item to selected list">🛒 Add to List</button>
+                    </div>
+                    <p id="existing-list-error" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">Please select a list.</p>
+                    <p id="duplicate-item-error" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">This item is already in the selected list.</p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeModal('add-to-list-modal')" class="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-100 transition-colors" aria-label="Close modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quote-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="quote-title">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform transition-all scale-95 duration-300" role="document">
+            <h3 id="quote-title" class="text-2xl font-bold mb-4 text-blue-600">Request Quote for: <span id="quote-list-name"></span></h3>
+            <form id="quote-form" class="space-y-4">
+                <input type="hidden" id="quote-list-id-input">
+                
+                <div>
+                    <label for="quote-email" class="block text-sm font-medium text-gray-700">Email Address <span class="text-red-500">*</span></label>
+                    <input type="email" id="quote-email" required class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="you@company.com">
+                    <p id="error-email" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
+
+                <div>
+                    <label for="quote-contact" class="block text-sm font-medium text-gray-700">Contact Number <span class="text-red-500">*</span></label>
+                    <input type="tel" id="quote-contact" required class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="+91 9876543210">
+                    <p id="error-contact" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
+                
+                <div>
+                    <label for="quote-business" class="block text-sm font-medium text-gray-700">Business Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="quote-business" required class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Company Name">
+                    <p id="error-business" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
+
+                <div>
+                    <label for="quote-location" class="block text-sm font-medium text-gray-700">Delivery Location <span class="text-red-500">*</span></label>
+                    <input type="text" id="quote-location" required class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="City, State, Country">
+                    <p id="error-location" class="text-red-500 text-xs mt-1 hidden"></p>
+                </div>
+
+                <div>
+                    <label for="quote-message" class="block text-sm font-medium text-gray-700">Message (Optional)</label>
+                    <textarea id="quote-message" rows="3" class="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Any special instructions or requirements..."></textarea>
+                </div>
+
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('quote-modal')" class="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-100 transition-colors" aria-label="Cancel quote request">Cancel</button>
+                    <button type="submit" id="submit-quote-btn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Submit quote request">
+                        <span id="submit-quote-text">📩 Send Quote</span>
+                        <span id="submit-quote-loading" class="hidden">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Sending...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2">
+        </div>
+
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center p-4 transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 transform transition-all scale-95 duration-300" role="document">
+            <h3 id="confirm-title" class="text-xl font-bold mb-4 text-gray-800">Confirm Action</h3>
+            <p id="confirm-message" class="mb-6 text-gray-600">Are you sure you want to proceed with this action?</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeModal('confirmation-modal')" class="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-100 transition-colors" aria-label="Cancel">Cancel</button>
+                <button id="confirm-action-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors" aria-label="Confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ====================================================================
+        // I. DATA STRUCTURES & INITIALIZATION
+        // ====================================================================
+
+        const STORAGE_KEYS = {
+            PRODUCTS: 'arc_demo_products',
+            LISTS: 'arc_demo_lists',
+            USER: 'arc_demo_user',
+        };
+
+        // Sample Product Data (Mix of priced/unpriced, in-stock/out-of-stock)
+        const SAMPLE_PRODUCTS = [
+            { id: 'PROD001', partNumber: 'RES1K-1/4W', description: 'Resistor 1kΩ 5% 1/4W Carbon Film, 50ppm/C', brand: 'Vishay', price: 0.05, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=RES1K' },
+            { id: 'PROD002', partNumber: 'CAP100NF', description: 'Capacitor 100nF 50V Ceramic Multilayer X7R', brand: 'Murata', price: 0.12, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=CAP100N' },
+            { id: 'PROD003', partNumber: 'LED-RED-5MM', description: 'Standard Red LED 5mm T-1 3/4, 20mA, 2.0V', brand: 'Kingbright', price: 0.08, inventory: 'Low Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=LED-RED' },
+            { id: 'PROD004', partNumber: '74HC00N', description: 'Quad 2-Input NAND Gate IC, HC Logic Series', brand: 'Texas Inst.', price: 0.55, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=74HC00' },
+            { id: 'PROD005', partNumber: 'REG-3V3-LDO', description: '3.3V LDO Voltage Regulator, SOT-23 Package', brand: 'STMicro', price: 0.89, inventory: 'Out of Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=REG-3V3' },
+            { id: 'PROD006', partNumber: 'FUSE-2A-SLOW', description: 'Fuse 2A 250V Slow-Blow Cartridge, 5x20mm', brand: 'Littelfuse', price: 1.45, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=FUSE-2A' },
+            { id: 'PROD007', partNumber: 'SW-SPDT-TGL', description: 'Toggle Switch SPDT ON-ON Panel Mount', brand: 'C&K', price: null, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=SW-TGL' },
+            { id: 'PROD008', partNumber: 'CONN-USB-C', description: 'USB Type-C Receptacle, Surface Mount, 24 Pin', brand: 'Molex', price: 2.10, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=USB-C' },
+            { id: 'PROD009', partNumber: 'TEMP-SENSOR', description: 'Digital Temperature Sensor I2C Interface, ±0.5°C', brand: 'Analog Dev.', price: 3.75, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=TEMP-SEN' },
+            { id: 'PROD010', partNumber: 'OPAMP-LOWNOISE', description: 'Low Noise Rail-to-Rail Operational Amplifier', brand: 'TI', price: 1.99, inventory: 'Discontinued', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=OPAMP' },
+            { id: 'PROD011', partNumber: 'PWR-JACK-2.1MM', description: 'DC Power Jack 2.1mm Center Pin, Thru Hole', brand: 'CUI Devices', price: 0.95, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=DC-JACK' },
+            { id: 'PROD012', partNumber: 'TRANS-NPN-BJT', description: 'NPN Transistor, 0.5A, 45V, TO-92 Package', brand: 'ON Semi', price: 0.03, inventory: 'In Stock', imageUrl: 'https://via.placeholder.com/200x150/f0f9ff/1d4ed8?text=TRANS-NPN' },
+        ];
+
+        // Demo User Data
+        const DEMO_USER = {
+            email: "demo@company.com",
+            contact: "+91 9876543210",
+            business: "Demo Co."
+        };
+
+        let currentView = 'products';
+        let currentProduct = null; // Used to hold product data for the Add-to-List modal
+
+        // Global state for lists and products
+        let products = [];
+        let lists = [];
+        let demoUser = {};
+
+        /**
+         * Loads data from localStorage or initializes with samples.
+         */
+        function loadData() {
+            try {
+                // Products
+                let storedProducts = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+                products = storedProducts ? JSON.parse(storedProducts) : SAMPLE_PRODUCTS;
+                localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+
+                // Lists
+                let storedLists = localStorage.getItem(STORAGE_KEYS.LISTS);
+                lists = storedLists ? JSON.parse(storedLists) : [];
+                
+                // User
+                let storedUser = localStorage.getItem(STORAGE_KEYS.USER);
+                demoUser = storedUser ? JSON.parse(storedUser) : DEMO_USER;
+                localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(demoUser));
+
+            } catch (error) {
+                console.error("Error loading or initializing data from localStorage:", error);
+                // Fallback to in-memory defaults if storage fails
+                products = SAMPLE_PRODUCTS;
+                lists = [];
+                demoUser = DEMO_USER;
+            }
+            
+            // Initial render
+            renderProducts();
+            renderLists();
+            updateListCounter();
+        }
+
+        /**
+         * Saves the current lists array back to localStorage.
+         */
+        function saveLists() {
+            try {
+                localStorage.setItem(STORAGE_KEYS.LISTS, JSON.stringify(lists));
+                updateListCounter();
+                renderLists(); // Re-render lists to reflect changes (e.g., quantity)
+            } catch (error) {
+                console.error("Error saving lists to localStorage:", error);
+                showToast('Error saving lists.', 'error');
+            }
+        }
+
+        // ====================================================================
+        // II. HELPER & UTILITY FUNCTIONS
+        // ====================================================================
+
+        /**
+         * Generates a unique ID (simple timestamp-based for this demo).
+         * @returns {string} A unique ID.
+         */
+        function generateId() {
+            return 'list-' + Date.now();
+        }
+
+        /**
+         * Formats a number as currency (USD for simplicity).
+         * @param {number|null|undefined} price
+         * @returns {string} Formatted price or a placeholder string.
+         */
+        function formatPrice(price) {
+            if (price === null || price === undefined) {
+                return 'Price N/A';
+            }
+            return price.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+        }
+
+        /**
+         * Clears all validation errors for a form.
+         * @param {HTMLElement} formElement
+         */
+        function clearFormErrors(formElement) {
+            formElement.querySelectorAll('[id^="error-"]').forEach(el => el.classList.add('hidden'));
+            formElement.querySelectorAll('.border-red-500').forEach(el => el.classList.remove('border-red-500'));
+        }
+
+        /**
+         * Shows an inline error message.
+         * @param {string} errorId The ID of the error message element.
+         * @param {string} message The error message to display.
+         * @param {string} inputId The ID of the input to highlight (optional).
+         */
+        function showInlineError(errorId, message, inputId = null) {
+            const errorElement = document.getElementById(errorId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+            if (inputId) {
+                const inputElement = document.getElementById(inputId);
+                if (inputElement) {
+                    inputElement.classList.add('border-red-500');
+                }
+            }
+        }
+
+        // ====================================================================
+        // III. UX & MODAL MANAGEMENT
+        // ====================================================================
+
+        /**
+         * Updates the list counter badge.
+         */
+        function updateListCounter() {
+            const counter = document.getElementById('list-counter');
+            if (counter) {
+                counter.textContent = lists.length;
+                counter.classList.toggle('hidden', lists.length === 0);
+            }
+        }
+
+        /**
+         * Changes the main view (Products <-> My Lists).
+         * @param {string} view 'products' or 'lists'
+         */
+        function changeView(view) {
+            currentView = view;
+            document.getElementById('products-view').classList.toggle('hidden', view !== 'products');
+            document.getElementById('lists-view').classList.toggle('hidden', view !== 'lists');
+
+            document.querySelectorAll('.view-tab').forEach(btn => {
+                const isSelected = btn.getAttribute('data-view') === view;
+                btn.classList.toggle('bg-blue-600', isSelected);
+                btn.classList.toggle('text-white', isSelected);
+                btn.classList.toggle('shadow-sm', isSelected);
+                btn.classList.toggle('bg-gray-100', !isSelected);
+                btn.classList.toggle('text-gray-700', !isSelected);
+            });
+            renderLists(); // Re-render lists to ensure latest state is shown
+        }
+
+        /**
+         * Shows a modal by its ID.
+         * @param {string} modalId
+         */
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    modal.querySelector('[role="document"]').classList.add('scale-100');
+                    modal.querySelector('[role="document"]').classList.remove('scale-95');
+                }, 10);
+                // Trap focus (simple, not full a11y focus trapping)
+                const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusableElements.length > 0) {
+                    focusableElements[0].focus();
+                }
+            }
+        }
+
+        /**
+         * Hides a modal by its ID.
+         * @param {string} modalId
+         */
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.querySelector('[role="document"]').classList.remove('scale-100');
+                modal.querySelector('[role="document"]').classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    // Reset errors and inputs on close
+                    if (modalId === 'add-to-list-modal') {
+                        document.getElementById('new-list-name-input').value = '';
+                        document.getElementById('new-list-error').classList.add('hidden');
+                        document.getElementById('existing-list-error').classList.add('hidden');
+                        document.getElementById('duplicate-item-error').classList.add('hidden');
+                        document.getElementById('add-to-existing-btn').disabled = true;
+                    } else if (modalId === 'quote-modal') {
+                        clearFormErrors(document.getElementById('quote-form'));
+                    }
+                }, 300);
+            }
+        }
+
+        /**
+         * Shows a toast notification.
+         * @param {string} message The message to display.
+         * @param {string} type 'success', 'error', or 'info'.
+         */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const colorMap = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+
+            const iconMap = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-lg shadow-lg text-white font-medium flex items-center space-x-3 ${colorMap[type] || colorMap.info} transition-all duration-300 transform translate-x-full opacity-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `<span class="text-xl">${iconMap[type] || iconMap.info}</span><span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+                toast.classList.add('translate-x-0', 'opacity-100');
+            }, 10);
+
+            // Animate out and remove after 3s
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300); // Wait for transition to finish
+            }, 3000);
+        }
+
+        /**
+         * Opens the generic confirmation modal.
+         * @param {string} message Confirmation message.
+         * @param {function} onConfirm Callback function on confirmation.
+         * @param {string} confirmText Text for the confirm button.
+         * @param {string} confirmColor Color class for the confirm button.
+         */
+        function showConfirmation(message, onConfirm, confirmText = 'Confirm', confirmColor = 'bg-red-600 hover:bg-red-700') {
+            const modal = document.getElementById('confirmation-modal');
+            const messageEl = document.getElementById('confirm-message');
+            const confirmBtn = document.getElementById('confirm-action-btn');
+
+            messageEl.textContent = message;
+            
+            // Clear previous event listener
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            newConfirmBtn.textContent = confirmText;
+            newConfirmBtn.className = `px-4 py-2 text-white rounded-md transition-colors ${confirmColor}`;
+
+            newConfirmBtn.onclick = () => {
+                onConfirm();
+                closeModal('confirmation-modal');
+            };
+
+            showModal('confirmation-modal');
+        }
+
+        // ====================================================================
+        // IV. RENDERING FUNCTIONS
+        // ====================================================================
+
+        /**
+         * Renders the product grid.
+         */
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-200">
+                    <img src="${p.imageUrl}" alt="${p.partNumber} image" class="w-full h-40 object-cover bg-blue-50">
+                    <div class="p-4 space-y-2">
+                        <p class="text-sm text-gray-400">${p.brand}</p>
+                        <h3 class="text-xl font-bold text-gray-800">${p.partNumber}</h3>
+                        <p class="truncate-2-lines text-gray-600 text-sm h-10">${p.description}</p>
+                        <div class="flex justify-between items-center pt-2">
+                            <span class="text-lg font-extrabold ${p.price === null ? 'text-gray-500' : 'text-green-600'}">
+                                ${formatPrice(p.price)}
+                            </span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${p.inventory === 'In Stock' ? 'bg-green-100 text-green-700' : p.inventory === 'Low Stock' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">
+                                ${p.inventory}
+                            </span>
+                        </div>
+                        <button onclick="openAddToListModal('${p.id}')" class="w-full py-2 mt-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium">
+                            <span class="inline-block transform transition-transform group-hover:rotate-6">➕</span> Add to List
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Renders the list of lists.
+         */
+        function renderLists() {
+            const container = document.getElementById('lists-container');
+            const emptyState = document.getElementById('lists-empty');
+
+            if (lists.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = lists.map(list => {
+                const hasPriceAndInventory = list.items.every(item => item.price !== null && item.inventory && item.inventory !== 'Out of Stock' && item.inventory !== 'Discontinued');
+                const isNotEmpty = list.items.length > 0;
+                
+                return `
+                    <div class="list-card bg-white rounded-lg shadow-lg border border-gray-200 p-4 space-y-3" data-list-id="${list.id}">
+                        <div class="flex justify-between items-start border-b pb-3 mb-3">
+                            <h3 class="text-xl font-extrabold text-gray-800 flex items-center space-x-2">
+                                <span 
+                                    contenteditable="true" 
+                                    onblur="saveListName(this, '${list.id}')" 
+                                    onkeydown="if(event.key === 'Enter') { event.preventDefault(); this.blur(); }"
+                                    class="list-name-editable p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[100px]"
+                                    aria-label="Editable list name: ${list.name}"
+                                >${list.name}</span>
+                                <span id="name-error-${list.id}" class="text-red-500 text-xs hidden"></span>
+                            </h3>
+                            <div class="flex space-x-2 text-sm text-gray-600">
+                                <button onclick="duplicateList('${list.id}')" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Duplicate List" aria-label="Duplicate list ${list.name}">📄</button>
+                                <button onclick="printList('${list.id}')" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Print List" aria-label="Print list ${list.name}">🖨️</button>
+                                <button onclick="exportListToCSV('${list.id}')" class="p-2 rounded-full hover:bg-gray-100 transition-colors" title="Export CSV" aria-label="Export list ${list.name} to CSV">⬇️</button>
+                                <button onclick="confirmDeleteList('${list.id}', '${list.name}')" class="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors" title="Delete List" aria-label="Delete list ${list.name}">🗑️</button>
+                            </div>
+                        </div>
+
+                        <div class="list-items-scrollable max-h-96 overflow-y-auto pr-2 space-y-3" id="list-items-${list.id}">
+                            ${list.items.length > 0 ? list.items.map(item => `
+                                <div class="item-card flex items-center border-b pb-3 last:border-b-0 last:pb-0">
+                                    <img src="${item.imageUrl}" alt="${item.partNumber} image" class="w-12 h-12 object-cover rounded-md flex-shrink-0 mr-3 bg-blue-50">
+                                    <div class="flex-grow min-w-0">
+                                        <p class="font-semibold text-gray-800 text-sm">${item.partNumber}</p>
+                                        <p class="text-xs text-gray-600 truncate">${item.description}</p>
+                                        <p class="text-xs font-bold ${item.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(item.price)}</p>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2 ml-4 flex-shrink-0">
+                                        <div class="flex flex-col items-end">
+                                            <label for="qty-input-${list.id}-${item.id}" class="text-xs text-gray-500 mb-1">Required Qty</label>
+                                            <input 
+                                                type="number" 
+                                                min="0"
+                                                value="${item.quantity}" 
+                                                onchange="updateItemQuantity('${list.id}', '${item.id}', this.value)"
+                                                class="w-16 p-1 border rounded-md text-center text-sm quantity-input focus:ring-blue-500 focus:border-blue-500" 
+                                                aria-label="Required Quantity for ${item.partNumber}"
+                                                data-item-id="${item.id}"
+                                                id="qty-input-${list.id}-${item.id}" 
+                                            >
+                                            <p id="qty-error-${list.id}-${item.id}" class="text-red-500 text-xs mt-1 hidden" aria-live="polite">Qty > 0 required.</p>
+                                        </div>
+
+                                        ${item.price !== null && item.inventory && item.inventory !== 'Out of Stock' && item.inventory !== 'Discontinued' ? `
+                                            <button onclick="moveItemToCart('${list.id}', '${item.id}')" class="p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors" title="Move Item to Cart" aria-label="Move ${item.partNumber} to cart">🛒</button>
+                                        ` : '<span class="w-8"></span>'}
+                                        
+                                        <button onclick="confirmRemoveItem('${list.id}', '${item.id}', '${item.partNumber}')" class="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors" title="Remove Item" aria-label="Remove ${item.partNumber}">❌</button>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-gray-500 text-center py-4">This list is empty. Add some products!</p>'}
+                        </div>
+
+                        ${isNotEmpty ? `
+                            <div class="flex justify-end pt-3 border-t mt-3 space-x-2">
+                                ${hasPriceAndInventory ? `
+                                    <button onclick="moveFullListToCart('${list.id}')" class="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium" aria-label="Move entire list to cart">
+                                        🛒 Move List to Cart
+                                    </button>
+                                ` : ''}
+                                <button onclick="checkQuantitiesAndOpenQuote('${list.id}')" class="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium" aria-label="Send quote request for list ${list.name}">
+                                    💬 Send Quote
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ====================================================================
+        // V. PRODUCT & LIST ACTIONS
+        // ====================================================================
+
+        /**
+         * Opens the modal to add a product to a new or existing list.
+         * @param {string} productId
+         */
+        function openAddToListModal(productId) {
+            currentProduct = products.find(p => p.id === productId);
+            if (!currentProduct) {
+                showToast('Product not found!', 'error');
+                return;
+            }
+
+            // Populate preview
+            document.getElementById('modal-product-part').textContent = currentProduct.partNumber;
+            const previewHtml = `
+                <img src="${currentProduct.imageUrl}" alt="${currentProduct.partNumber} image" class="w-20 h-20 object-cover rounded-md flex-shrink-0 mr-4 bg-blue-50">
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold">${currentProduct.partNumber} (${currentProduct.brand})</p>
+                    <p class="text-xs text-gray-600 truncate-2-lines">${currentProduct.description}</p>
+                    <p class="text-xs font-bold ${currentProduct.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(currentProduct.price)}</p>
+                </div>
+            `;
+            document.getElementById('modal-product-preview').innerHTML = previewHtml;
+
+            // Populate existing list dropdown
+            const selectEl = document.getElementById('existing-list-select');
+            selectEl.innerHTML = '<option value="">Select a List</option>' + lists.map(list => `
+                <option value="${list.id}">${list.name} (${list.items.length} items)</option>
+            `).join('');
+
+            document.getElementById('add-to-existing-btn').disabled = true;
+            document.getElementById('existing-list-select').value = '';
+            document.getElementById('new-list-name-input').value = '';
+
+            showModal('add-to-list-modal');
+        }
+
+        /**
+         * Adds an event listener for the existing list dropdown change.
+         */
+        document.getElementById('existing-list-select').addEventListener('change', (e) => {
+            const listId = e.target.value;
+            const btn = document.getElementById('add-to-existing-btn');
+            const errorEl = document.getElementById('duplicate-item-error');
+            const selectErrorEl = document.getElementById('existing-list-error');
+
+            selectErrorEl.classList.add('hidden');
+            errorEl.classList.add('hidden');
+            
+            if (!listId) {
+                btn.disabled = true;
+                return;
+            }
+
+            const selectedList = lists.find(l => l.id === listId);
+            const isDuplicate = selectedList.items.some(item => item.id === currentProduct.id);
+
+            if (isDuplicate) {
+                btn.disabled = true;
+                errorEl.textContent = `Item ${currentProduct.partNumber} is already in list "${selectedList.name}".`;
+                errorEl.classList.remove('hidden');
+            } else {
+                btn.disabled = false;
+            }
+        });
+
+        /**
+         * Handler for "Create & Add" button in modal.
+         */
+        document.getElementById('create-and-add-btn').addEventListener('click', () => {
+            const newNameInput = document.getElementById('new-list-name-input');
+            const newName = newNameInput.value.trim();
+            const errorEl = document.getElementById('new-list-error');
+            errorEl.classList.add('hidden');
+
+            if (!newName) {
+                errorEl.textContent = 'List name is required.';
+                errorEl.classList.remove('hidden');
+                newNameInput.focus();
+                return;
+            }
+            if (lists.some(list => list.name.toLowerCase() === newName.toLowerCase())) {
+                errorEl.textContent = `List name "${newName}" already exists.`;
+                errorEl.classList.remove('hidden');
+                newNameInput.focus();
+                return;
+            }
+
+            const newList = createNewList(newName);
+            addItemToList(newList.id, currentProduct);
+            closeModal('add-to-list-modal');
+            changeView('lists');
+        });
+
+        /**
+         * Handler for "Add to List" (existing) button in modal.
+         */
+        document.getElementById('add-to-existing-btn').addEventListener('click', () => {
+            const listId = document.getElementById('existing-list-select').value;
+            const errorEl = document.getElementById('existing-list-error');
+            errorEl.classList.add('hidden');
+
+            if (!listId) {
+                errorEl.textContent = 'Please select an existing list.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            // Duplicate check is handled by the 'change' listener and button enable state, 
+            // but we double-check here just in case.
+            const selectedList = lists.find(l => l.id === listId);
+            const isDuplicate = selectedList.items.some(item => item.id === currentProduct.id);
+
+            if (isDuplicate) {
+                document.getElementById('duplicate-item-error').textContent = `Item ${currentProduct.partNumber} is already in list "${selectedList.name}".`;
+                document.getElementById('duplicate-item-error').classList.remove('hidden');
+                return;
+            }
+
+            addItemToList(listId, currentProduct);
+            closeModal('add-to-list-modal');
+            changeView('lists');
+        });
+
+        /**
+         * Creates a new list and adds it to the global state.
+         * @param {string} name
+         * @returns {object} The newly created list object.
+         */
+        function createNewList(name) {
+            const newList = {
+                id: generateId(),
+                name: name,
+                items: [],
+                createdAt: Date.now()
+            };
+            lists.push(newList);
+            saveLists();
+            showToast(`List "${name}" created.`, 'success');
+            return newList;
+        }
+
+        /**
+         * Adds a product to a specified list.
+         * @param {string} listId
+         * @param {object} product Product object to add.
+         */
+        function addItemToList(listId, product) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            // Ensure the item object is ready for the list (with quantity)
+            const newItem = {
+                id: product.id,
+                partNumber: product.partNumber,
+                description: product.description,
+                brand: product.brand,
+                price: product.price,
+                inventory: product.inventory,
+                imageUrl: product.imageUrl,
+                quantity: 0
+            };
+
+            list.items.push(newItem);
+            saveLists();
+            showToast(`Item ${product.partNumber} added to list "${list.name}".`, 'success');
+        }
+
+        /**
+         * Confirms and removes an item from a list.
+         * @param {string} listId
+         * @param {string} itemId
+         * @param {string} partNumber
+         */
+        function confirmRemoveItem(listId, itemId, partNumber) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            showConfirmation(
+                `Are you sure you want to remove ${partNumber} from list "${list.name}"?`,
+                () => {
+                    removeItemFromList(listId, itemId);
+                },
+                'Remove',
+                'bg-red-600 hover:bg-red-700'
+            );
+        }
+
+        /**
+         * Removes an item from a list.
+         * @param {string} listId
+         * @param {string} itemId
+         */
+        function removeItemFromList(listId, itemId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            const initialLength = list.items.length;
+            list.items = list.items.filter(item => item.id !== itemId);
+            
+            if (list.items.length < initialLength) {
+                saveLists();
+                showToast('Item removed successfully.', 'info');
+            }
+        }
+
+        /**
+         * Updates an item's quantity in a list.
+         * @param {string} listId
+         * @param {string} itemId
+         * @param {string} value New quantity value.
+         */
+        function updateItemQuantity(listId, itemId, value) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            const item = list.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            let qty = parseInt(value, 10);
+            if (isNaN(qty) || qty < 0) {
+                qty = 0; // Default to 0 or re-apply current value
+            }
+
+            // Only save if the quantity actually changed
+            if (item.quantity !== qty) {
+                item.quantity = qty;
+                saveLists();
+            }
+        }
+
+        /**
+         * Handles inline editing of a list name.
+         * @param {HTMLElement} element
+         * @param {string} listId
+         */
+        function saveListName(element, listId) {
+            const newName = element.textContent.trim();
+            const originalName = lists.find(l => l.id === listId).name;
+            const errorEl = document.getElementById(`name-error-${listId}`);
+            errorEl.classList.add('hidden');
+
+            if (!newName) {
+                element.textContent = originalName; // Revert
+                showToast('List name cannot be empty.', 'error');
+                return;
+            }
+
+            if (newName.toLowerCase() === originalName.toLowerCase()) {
+                return; // No change
+            }
+
+            if (lists.some(list => list.id !== listId && list.name.toLowerCase() === newName.toLowerCase())) {
+                errorEl.textContent = 'Name already exists.';
+                errorEl.classList.remove('hidden');
+                setTimeout(() => {
+                    element.textContent = originalName; // Revert after brief error display
+                    errorEl.classList.add('hidden');
+                }, 1500);
+                return;
+            }
+
+            const list = lists.find(l => l.id === listId);
+            if (list) {
+                list.name = newName;
+                saveLists();
+                showToast(`List renamed to "${newName}".`, 'success');
+            }
+        }
+
+        /**
+         * Confirms and deletes a list.
+         * @param {string} listId
+         * @param {string} listName
+         */
+        function confirmDeleteList(listId, listName) {
+            showConfirmation(
+                `Are you sure you want to delete the list "${listName}"? This action cannot be undone.`,
+                () => {
+                    deleteList(listId);
+                },
+                'Delete List',
+                'bg-red-600 hover:bg-red-700'
+            );
+        }
+
+        /**
+         * Deletes a list by ID.
+         * @param {string} listId
+         */
+        function deleteList(listId) {
+            const listIndex = lists.findIndex(l => l.id === listId);
+            if (listIndex !== -1) {
+                const listName = lists[listIndex].name;
+                lists.splice(listIndex, 1);
+                saveLists();
+                showToast(`List "${listName}" deleted.`, 'success');
+            }
+        }
+
+        /**
+         * Duplicates an existing list.
+         * @param {string} originalListId
+         */
+        function duplicateList(originalListId) {
+            const originalList = lists.find(l => l.id === originalListId);
+            if (!originalList) return;
+
+            // Prompt for new name with validation loop
+            function promptForNewName() {
+                let newName = prompt(`Enter a new name for the duplicate of "${originalList.name}":`, `${originalList.name} (Copy)`);
+
+                if (newName === null) {
+                    return; // User cancelled
+                }
+                
+                newName = newName.trim();
+                
+                if (!newName) {
+                    showToast('List name cannot be empty.', 'error');
+                    promptForNewName(); // Re-prompt
+                    return;
+                }
+
+                if (lists.some(list => list.name.toLowerCase() === newName.toLowerCase())) {
+                    showToast(`List name "${newName}" already exists.`, 'error');
+                    promptForNewName(); // Re-prompt
+                    return;
+                }
+
+                // Create new list object
+                const newItems = originalList.items.map(item => ({
+                    ...item,
+                    quantity: 0 // Quantities reset to 0
+                }));
+
+                const newList = {
+                    id: generateId(),
+                    name: newName,
+                    items: newItems,
+                    createdAt: Date.now()
+                };
+
+                lists.push(newList);
+                saveLists();
+                showToast(`List "${originalList.name}" duplicated as "${newName}". Quantities reset to 0.`, 'success');
+            }
+
+            promptForNewName();
+        }
+
+        /**
+         * Moves a single item to a simulated cart.
+         * @param {string} listId
+         * @param {string} itemId
+         */
+        function moveItemToCart(listId, itemId) {
+            const list = lists.find(l => l.id === listId);
+            const item = list?.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            // Simulate "Move to Cart" logic
+            const isMOQ = item.quantity === 0 || isNaN(item.quantity) || item.quantity < 0;
+
+            // Optional: You could remove the item from the list here if it's a "move"
+            // removeItemFromList(listId, itemId); // keeping it for demo purposes
+
+            if (isMOQ) {
+                showToast('Item moved to your cart with MOQ values (Qty: 1 assumed for cart). You can change it on the cart page.', 'info');
+            } else {
+                showToast(`Item ${item.partNumber} (Qty: ${item.quantity}) moved to your cart.`, 'success');
+            }
+        }
+
+        /**
+         * Moves an entire list to a simulated cart.
+         * @param {string} listId
+         */
+        function moveFullListToCart(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            const hasZeroQty = list.items.some(item => item.quantity === 0 || isNaN(item.quantity) || item.quantity < 0);
+
+            // Simulate "Move to Cart" logic
+            // In a real app, you'd send this to a backend cart service
+
+            showToast(`List "${list.name}" moved to your cart.`, 'success');
+
+            if (hasZeroQty) {
+                showToast('Some items were moved with MOQ values (Qty: 1 assumed for cart). You can change them on the cart page.', 'info');
+            }
+            
+            // For a demo, let's keep the list, but in a real flow, you might delete it or clear quantities.
+            // confirmDeleteList(listId, list.name); // If the goal is to clear the list
+        }
+
+        // ====================================================================
+        // VI. QUOTE REQUEST LOGIC
+        // ====================================================================
+
+        /**
+         * Checks quantities and opens the quote modal if valid.
+         * @param {string} listId
+         */
+        function checkQuantitiesAndOpenQuote(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list || list.items.length === 0) return;
+
+            let allValid = true;
+            list.items.forEach(item => {
+                const qty = parseInt(item.quantity, 10);
+                const errorId = `qty-error-${listId}-${item.id}`;
+                const errorEl = document.getElementById(errorId);
+                const inputEl = document.querySelector(`#list-items-${listId} input[data-item-id="${item.id}"]`);
+
+                if (!qty || qty <= 0 || isNaN(qty)) {
+                    allValid = false;
+                    if (errorEl) {
+                        errorEl.classList.remove('hidden');
+                    }
+                    if (inputEl) {
+                        inputEl.classList.add('border-red-500');
+                    }
+                } else {
+                    if (errorEl) {
+                        errorEl.classList.add('hidden');
+                    }
+                    if (inputEl) {
+                        inputEl.classList.remove('border-red-500');
+                    }
+                }
+            });
+
+            if (!allValid) {
+                showToast('All items must have a required quantity greater than 0 to submit a quote.', 'error');
+                // Scroll the view to the first error
+                const firstError = document.querySelector(`#list-items-${listId} .border-red-500`);
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            // If all quantities are valid, populate and open the quote modal
+            openQuoteModal(listId);
+        }
+
+        /**
+         * Populates and displays the quote request modal.
+         * @param {string} listId
+         */
+        function openQuoteModal(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            document.getElementById('quote-list-id-input').value = listId;
+            document.getElementById('quote-list-name').textContent = list.name;
+
+            // Auto-fill fields from demo user
+            document.getElementById('quote-email').value = demoUser.email || '';
+            document.getElementById('quote-contact').value = demoUser.contact || '';
+            document.getElementById('quote-business').value = demoUser.business || '';
+            document.getElementById('quote-location').value = '';
+            document.getElementById('quote-message').value = '';
+
+            clearFormErrors(document.getElementById('quote-form'));
+
+            showModal('quote-modal');
+        }
+
+        /**
+         * Form submission handler for the quote form.
+         * @param {Event} e
+         */
+        document.getElementById('quote-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validateQuoteForm()) {
+                submitQuote();
+            }
+        });
+
+        /**
+         * Real-time validation for quote form inputs.
+         */
+        ['quote-email', 'quote-contact', 'quote-business', 'quote-location'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => validateQuoteField(id, true));
+        });
+
+        /**
+         * Validates a single quote form field.
+         * @param {string} fieldId
+         * @param {boolean} highlight
+         * @returns {boolean}
+         */
+        function validateQuoteField(fieldId, highlight = false) {
+            const input = document.getElementById(fieldId);
+            const value = input.value.trim();
+            const errorId = `error-${fieldId.split('-')[1]}`;
+            const errorEl = document.getElementById(errorId);
+            let isValid = true;
+            let errorMessage = '';
+
+            // Reset state
+            errorEl.classList.add('hidden');
+            input.classList.remove('border-red-500');
+
+            if (!value) {
+                isValid = false;
+                errorMessage = 'This field is mandatory.';
+            } else if (fieldId === 'quote-email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    isValid = false;
+                    errorMessage = 'Please enter a valid email address.';
+                }
+            } else if (fieldId === 'quote-contact') {
+                // Allows +, spaces, hyphens, min 10 digits
+                const contactRegex = /^[\d\s\-\+]{10,}$/;
+                if (!contactRegex.test(value.replace(/[^0-9]/g, '')) || value.replace(/[^0-9]/g, '').length < 10) {
+                    isValid = false;
+                    errorMessage = 'Minimum 10 digits required.';
+                }
+            } else if (fieldId === 'quote-business') {
+                if (value.length < 2) {
+                    isValid = false;
+                    errorMessage = 'Minimum 2 characters required.';
+                }
+            } else if (fieldId === 'quote-location') {
+                if (value.length < 3) {
+                    isValid = false;
+                    errorMessage = 'Minimum 3 characters required.';
+                }
+            }
+
+            if (!isValid && highlight) {
+                showInlineError(errorId, errorMessage, fieldId);
+            }
+
+            return isValid;
+        }
+
+        /**
+         * Validates the entire quote form.
+         * @returns {boolean}
+         */
+        function validateQuoteForm() {
+            let formValid = true;
+            ['quote-email', 'quote-contact', 'quote-business', 'quote-location'].forEach(id => {
+                if (!validateQuoteField(id, true)) {
+                    formValid = false;
+                }
+            });
+            return formValid;
+        }
+
+        /**
+         * Simulates quote submission, logs JSON, and cleans up.
+         */
+        function submitQuote() {
+            const listId = document.getElementById('quote-list-id-input').value;
+            const list = lists.find(l => l.id === listId);
+            if (!list) return;
+
+            const submitBtn = document.getElementById('submit-quote-btn');
+            const submitText = document.getElementById('submit-quote-text');
+            const submitLoading = document.getElementById('submit-quote-loading');
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitLoading.classList.remove('hidden');
+
+            const quoteData = {
+                listName: list.name,
+                items: list.items.filter(item => item.quantity > 0).map(item => ({
+                    partNumber: item.partNumber,
+                    description: item.description,
+                    brand: item.brand,
+                    price: item.price,
+                    quantity: item.quantity
+                })),
+                user: {
+                    email: document.getElementById('quote-email').value.trim(),
+                    contact: document.getElementById('quote-contact').value.trim(),
+                    business: document.getElementById('quote-business').value.trim(),
+                    deliveryLocation: document.getElementById('quote-location').value.trim()
+                },
+                message: document.getElementById('quote-message').value.trim() || null
+            };
+
+            // Simulate API call delay
+            setTimeout(() => {
+                // Log JSON to console
+                console.groupCollapsed(`✉️ Quote Submitted for: ${list.name}`);
+                console.log('--- Quote Request JSON ---');
+                console.log(JSON.stringify(quoteData, null, 2));
+                console.groupEnd();
+
+                // 1. Remove submitted list
+                deleteList(listId);
+
+                // 2. Hide loading and show success
+                submitText.classList.remove('hidden');
+                submitLoading.classList.add('hidden');
+                submitBtn.disabled = false;
+                
+                showToast(`Quote for "${list.name}" submitted successfully!`, 'success');
+                
+                // 3. Close modal
+                closeModal('quote-modal');
+
+            }, 1000); // 1 second simulated delay
+        }
+
+        // ====================================================================
+        // VII. ENHANCEMENT FEATURES (Export & Print)
+        // ====================================================================
+
+        /**
+         * Exports the current list as a CSV file.
+         * @param {string} listId
+         */
+        function exportListToCSV(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list || list.items.length === 0) {
+                showToast('List is empty. Cannot export.', 'info');
+                return;
+            }
+
+            const headers = ["Part Number", "Description", "Brand", "Price", "Inventory Status", "Quantity"];
+            const rows = list.items.map(item => [
+                `"${item.partNumber}"`,
+                `"${item.description.replace(/"/g, '""')}"`, // Handle quotes in descriptions
+                `"${item.brand}"`,
+                item.price !== null ? item.price.toString() : 'N/A',
+                `"${item.inventory}"`,
+                item.quantity.toString()
+            ]);
+
+            const csvContent = [
+                headers.join(","),
+                ...rows.map(e => e.join(","))
+            ].join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            if (link.download !== undefined) { 
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${list.name.replace(/[^a-zA-Z0-9]/g, '_')}_Quote_Export.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast(`List "${list.name}" exported to CSV.`, 'success');
+            } else {
+                showToast('CSV export not supported by your browser.', 'error');
+            }
+        }
+
+        /**
+         * Generates and prints a clean view of the specified list.
+         * @param {string} listId
+         */
+        function printList(listId) {
+            const list = lists.find(l => l.id === listId);
+            if (!list || list.items.length === 0) {
+                showToast('List is empty. Nothing to print.', 'info');
+                return;
+            }
+
+            const printContainer = document.getElementById('print-container');
+            const date = new Date().toLocaleDateString();
+
+            // 1. Construct the printable HTML content
+            const tableRows = list.items.map(item => `
+                <tr>
+                    <td>${item.partNumber}</td>
+                    <td>${item.description}</td>
+                    <td>${item.brand}</td>
+                    <td>${formatPrice(item.price)}</td>
+                    <td>${item.quantity}</td>
+                </tr>
+            `).join('');
+
+            const printableHtml = `
+                <div class="print-content p-6">
+                    <h1 class="print-header">Component List: ${list.name}</h1>
+                    <p class="print-meta">Generated on: ${date}</p>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Part Number</th>
+                                <th>Description</th>
+                                <th>Brand</th>
+                                <th>Unit Price</th>
+                                <th>Required Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // 2. Inject into the dedicated container and trigger print
+            printContainer.innerHTML = printableHtml;
+            window.print();
+
+            // 3. Clear container after print (optional, but good practice)
+            setTimeout(() => {
+                printContainer.innerHTML = '';
+            }, 500);
+        }
+
+        // ====================================================================
+        // VIII. INITIALIZATION & EVENT LISTENERS
+        // ====================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+
+            // Set up view toggle events
+            document.querySelectorAll('.view-tab').forEach(btn => {
+                btn.addEventListener('click', () => changeView(btn.getAttribute('data-view')));
+            });
+
+            // Close modals on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (!document.getElementById('confirmation-modal').classList.contains('hidden')) {
+                        closeModal('confirmation-modal');
+                    } else if (!document.getElementById('quote-modal').classList.contains('hidden')) {
+                        closeModal('quote-modal');
+                    } else if (!document.getElementById('add-to-list-modal').classList.contains('hidden')) {
+                        closeModal('add-to-list-modal');
+                    }
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
