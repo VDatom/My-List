@@ -371,6 +371,25 @@
             }
         }
 
+        /**
+         * Helper to determine badge color based on inventory status.
+         * @param {string} inventory
+         * @returns {string} Tailwind CSS classes for badge background and text.
+         */
+        function getInventoryBadgeClasses(inventory) {
+            switch (inventory) {
+                case 'In Stock':
+                    return 'bg-green-100 text-green-700';
+                case 'Low Stock':
+                    return 'bg-yellow-100 text-yellow-700';
+                case 'Out of Stock':
+                case 'Discontinued':
+                    return 'bg-red-100 text-red-700';
+                default:
+                    return 'bg-gray-100 text-gray-700';
+            }
+        }
+
         // ====================================================================
         // III. UX & MODAL MANAGEMENT
         // ====================================================================
@@ -544,7 +563,7 @@
                             <span class="text-lg font-extrabold ${p.price === null ? 'text-gray-500' : 'text-green-600'}">
                                 ${formatPrice(p.price)}
                             </span>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${p.inventory === 'In Stock' ? 'bg-green-100 text-green-700' : p.inventory === 'Low Stock' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(p.inventory)}">
                                 ${p.inventory}
                             </span>
                         </div>
@@ -603,7 +622,12 @@
                                     <div class="flex-grow min-w-0">
                                         <p class="font-semibold text-gray-800 text-sm">${item.partNumber}</p>
                                         <p class="text-xs text-gray-600 truncate">${item.description}</p>
-                                        <p class="text-xs font-bold ${item.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(item.price)}</p>
+                                        <div class="flex items-center space-x-2 mt-1">
+                                            <p class="text-xs font-bold ${item.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(item.price)}</p>
+                                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(item.inventory)}">
+                                                ${item.inventory}
+                                            </span>
+                                        </div>
                                     </div>
                                     
                                     <div class="flex items-center space-x-2 ml-4 flex-shrink-0">
@@ -671,7 +695,12 @@
                 <div class="min-w-0">
                     <p class="text-sm font-semibold">${currentProduct.partNumber} (${currentProduct.brand})</p>
                     <p class="text-xs text-gray-600 truncate-2-lines">${currentProduct.description}</p>
-                    <p class="text-xs font-bold ${currentProduct.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(currentProduct.price)}</p>
+                    <div class="flex items-center space-x-2 mt-1">
+                        <p class="text-xs font-bold ${currentProduct.price === null ? 'text-gray-500' : 'text-green-600'}">${formatPrice(currentProduct.price)}</p>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${getInventoryBadgeClasses(currentProduct.inventory)}">
+                            ${currentProduct.inventory}
+                        </span>
+                    </div>
                 </div>
             `;
             document.getElementById('modal-product-preview').innerHTML = previewHtml;
@@ -1232,6 +1261,7 @@
                     description: item.description,
                     brand: item.brand,
                     price: item.price,
+                    inventory: item.inventory, // Include inventory in quote data
                     quantity: item.quantity
                 })),
                 user: {
@@ -1282,7 +1312,8 @@
                 return;
             }
 
-            const headers = ["Part Number", "Description", "Brand", "Price", "Inventory Status", "Quantity"];
+            // MODIFICATION: Added "Inventory Status" header and data field.
+            const headers = ["Part Number", "Description", "Brand", "Unit Price", "Inventory Status", "Quantity"];
             const rows = list.items.map(item => [
                 `"${item.partNumber}"`,
                 `"${item.description.replace(/"/g, '""')}"`, // Handle quotes in descriptions
@@ -1329,12 +1360,14 @@
             const date = new Date().toLocaleDateString();
 
             // 1. Construct the printable HTML content
+            // MODIFICATION: Added a column for Inventory Status
             const tableRows = list.items.map(item => `
                 <tr>
                     <td>${item.partNumber}</td>
                     <td>${item.description}</td>
                     <td>${item.brand}</td>
                     <td>${formatPrice(item.price)}</td>
+                    <td>${item.inventory}</td> 
                     <td>${item.quantity}</td>
                 </tr>
             `).join('');
@@ -1350,6 +1383,7 @@
                                 <th>Description</th>
                                 <th>Brand</th>
                                 <th>Unit Price</th>
+                                <th>Inventory</th> 
                                 <th>Required Qty</th>
                             </tr>
                         </thead>
